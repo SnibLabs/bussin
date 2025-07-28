@@ -1,7 +1,7 @@
-// --- Space Shooter Game ---
+// --- Tropical Shooter Game ---
 // SNIB AI: Method names are consistent, initialization is immediate!
 
-class SpaceShooterGame {
+class TropicalShooterGame {
     constructor(containerId) {
         this.width = 480;
         this.height = 640;
@@ -70,7 +70,7 @@ class SpaceShooterGame {
             // Title
             const title = document.createElement('h1');
             title.id = 'gameTitle';
-            title.textContent = '🚀 Space Shooter';
+            title.textContent = '🏝️ Tropical Shooter';
             this.container.insertBefore(title, this.canvas);
 
             // Start Button
@@ -233,100 +233,217 @@ class SpaceShooterGame {
         const r = 16 + Math.random()*8;
         const speed = 2.2 + Math.random()*1.5;
         const sway = 1 + Math.random()*2.5;
-        this.enemies.push({x,y,r,speed,sway});
+        // Add a "coconut" and "pineapple" style for tropical theme!
+        const type = Math.random() < 0.5 ? 'coconut' : 'pineapple';
+        this.enemies.push({x,y,r,speed,sway,type});
     }
 
     draw() {
         const ctx = this.ctx;
-        // Clear
+        // Draw tropical background (sky, sea, sand)
         ctx.clearRect(0,0,this.width,this.height);
 
-        // Draw background stars
+        // Sky gradient
+        let skyGrad = ctx.createLinearGradient(0, 0, 0, this.height * 0.6);
+        skyGrad.addColorStop(0, "#48c6ef");
+        skyGrad.addColorStop(1, "#6fedd6");
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, this.width, this.height * 0.6);
+
+        // Sun
         ctx.save();
-        for (let i=0;i<40;i++) {
-            ctx.beginPath();
-            ctx.arc(
-                ((i*71)%this.width) + ((i%3)*15),
-                ((i*53)%this.height) + ((i%5)*9),
-                1.2+(i%2),
-                0, 2*Math.PI
-            );
-            ctx.globalAlpha = 0.45+0.1*(i%3);
-            ctx.fillStyle = "#b3e0ff";
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1.0;
+        ctx.beginPath();
+        ctx.arc(this.width - 70, 90, 38, 0, 2 * Math.PI);
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = "#fff39e";
+        ctx.shadowColor = "#ffe066";
+        ctx.shadowBlur = 24;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
         ctx.restore();
 
-        // Draw player ship
+        // Ocean
+        let seaGrad = ctx.createLinearGradient(0, this.height * 0.6, 0, this.height * 0.8);
+        seaGrad.addColorStop(0, "#4fc3f7");
+        seaGrad.addColorStop(1, "#1976d2");
+        ctx.fillStyle = seaGrad;
+        ctx.fillRect(0, this.height * 0.6, this.width, this.height * 0.2);
+
+        // Sand/beach
+        ctx.fillStyle = "#ffe7a0";
+        ctx.fillRect(0, this.height * 0.8, this.width, this.height * 0.2);
+
+        // Draw palm trees (decorative, fixed positions)
+        this.drawPalmTree(ctx, 60, this.height * 0.92, 1.2, -1);
+        this.drawPalmTree(ctx, this.width-80, this.height * 0.95, 1.1, 1);
+
+        // Draw tropical clouds
+        this.drawCloud(ctx, 110, 80, 48, 1);
+        this.drawCloud(ctx, 300, 65, 34, 0.7);
+        this.drawCloud(ctx, 200, 110, 40, 0.8);
+
+        // Draw player "surfboard" style ship
         if (this.state !== 'gameover') {
             ctx.save();
             ctx.translate(this.player.x, this.player.y);
-            // Glow
-            ctx.shadowColor = "#00d8ff";
-            ctx.shadowBlur = 14;
-            // Body
+            // Shadow under ship
+            ctx.save();
+            ctx.globalAlpha = 0.19;
             ctx.beginPath();
-            ctx.moveTo(0,-this.player.h/2-6);
-            ctx.lineTo(-this.player.w/2, this.player.h/2);
-            ctx.lineTo(0, this.player.h/2-4);
-            ctx.lineTo(this.player.w/2, this.player.h/2);
-            ctx.closePath();
-            ctx.fillStyle = "#32aaff";
+            ctx.ellipse(0, this.player.h/2+7, this.player.w/1.8, 6, 0, 0, 2*Math.PI);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+            ctx.restore();
+
+            // Surfboard body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.player.w/2, this.player.h, 0, 0, 2*Math.PI);
+            ctx.fillStyle = "#ffb700";
+            ctx.shadowColor = "#ffe066";
+            ctx.shadowBlur = 14;
             ctx.fill();
 
-            // Cockpit
+            // Surfboard stripe
             ctx.shadowBlur = 0;
+            ctx.save();
             ctx.beginPath();
-            ctx.ellipse(0, -6, 7, 4, 0, 0, 2*Math.PI);
-            ctx.fillStyle = "#e2faff";
-            ctx.globalAlpha = 0.9;
+            ctx.ellipse(0, 0, this.player.w/4.2, this.player.h-2, 0, 0, 2*Math.PI);
+            ctx.fillStyle = "#fff";
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+            ctx.restore();
+
+            // Tropical flower
+            ctx.save();
+            for(let i=0;i<5;i++){
+                ctx.rotate((Math.PI*2/5)*i);
+                ctx.beginPath();
+                ctx.ellipse(0, -6, 3.5, 7, 0, 0, 2*Math.PI);
+                ctx.fillStyle = "#ff4a4a";
+                ctx.globalAlpha = 0.82;
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Cockpit (blue glass)
+            ctx.beginPath();
+            ctx.ellipse(0, -3, 7, 4, 0, 0, 2*Math.PI);
+            ctx.fillStyle = "#9eefff";
+            ctx.globalAlpha = 0.95;
             ctx.fill();
             ctx.globalAlpha = 1.0;
             ctx.restore();
         }
 
-        // Draw bullets
+        // Draw water splash bullets
         ctx.save();
         this.bullets.forEach(b => {
             ctx.beginPath();
             ctx.arc(b.x, b.y, b.r, 0, 2*Math.PI);
-            ctx.fillStyle = "#fffba7";
-            ctx.shadowColor = "#ffee60";
-            ctx.shadowBlur = 10;
+            let grad = ctx.createRadialGradient(b.x, b.y, 1, b.x, b.y, b.r);
+            grad.addColorStop(0, "#fff");
+            grad.addColorStop(1, "#24e0ff");
+            ctx.fillStyle = grad;
+            ctx.shadowColor = "#24e0ff";
+            ctx.shadowBlur = 9;
             ctx.fill();
         });
         ctx.restore();
 
-        // Draw enemies
+        // Draw tropical enemies (coconut and pineapple)
         this.enemies.forEach(e => {
             ctx.save();
-            ctx.beginPath();
-            ctx.arc(e.x, e.y, e.r, 0, 2*Math.PI);
-            // Enemy gradient
-            const grad = ctx.createRadialGradient(e.x, e.y, 2, e.x, e.y, e.r);
-            grad.addColorStop(0, "#fff");
-            grad.addColorStop(0.2, "#ffbbbb");
-            grad.addColorStop(1, "#ff3264");
-            ctx.fillStyle = grad;
-            ctx.shadowColor = "#ff3264";
-            ctx.shadowBlur = 16;
-            ctx.fill();
+            if (e.type === 'coconut') {
+                // Coconut: brown circle + face
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r, 0, 2*Math.PI);
+                let grad = ctx.createRadialGradient(e.x, e.y, 3, e.x, e.y, e.r);
+                grad.addColorStop(0, "#fff3");
+                grad.addColorStop(0.3, "#ad6e2f");
+                grad.addColorStop(1, "#6b3b14");
+                ctx.fillStyle = grad;
+                ctx.shadowColor = "#ad6e2f";
+                ctx.shadowBlur = 10;
+                ctx.fill();
 
-            // Eyes
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            ctx.arc(e.x-6, e.y-2, 2, 0, 2*Math.PI);
-            ctx.arc(e.x+6, e.y-2, 2, 0, 2*Math.PI);
-            ctx.fillStyle = "#fff";
-            ctx.fill();
+                // Eyes
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.arc(e.x-5, e.y-3, 2, 0, 2*Math.PI);
+                ctx.arc(e.x+5, e.y-3, 2, 0, 2*Math.PI);
+                ctx.fillStyle = "#fff";
+                ctx.fill();
+
+                // Mouth (smile)
+                ctx.beginPath();
+                ctx.arc(e.x, e.y+4, 4, 0, Math.PI, false);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+            } else {
+                // Pineapple: yellow oval w/ green crown
+                ctx.save();
+                ctx.beginPath();
+                ctx.ellipse(e.x, e.y+2, e.r*0.9, e.r*1.1, 0, 0, 2*Math.PI);
+                let grad = ctx.createRadialGradient(e.x, e.y+4, 3, e.x, e.y+2, e.r);
+                grad.addColorStop(0, "#fff7");
+                grad.addColorStop(0.2, "#ffe066");
+                grad.addColorStop(1, "#e0b400");
+                ctx.fillStyle = grad;
+                ctx.shadowColor = "#ffe066";
+                ctx.shadowBlur = 12;
+                ctx.fill();
+
+                // Pineapple pattern (criss-cross)
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = "#e0b400cc";
+                ctx.lineWidth = 1;
+                for(let i=-3;i<=3;i++){
+                    ctx.beginPath();
+                    ctx.moveTo(e.x-10, e.y-4+i*4);
+                    ctx.lineTo(e.x+10, e.y+12+i*3);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(e.x-10, e.y+12+i*3);
+                    ctx.lineTo(e.x+10, e.y-4+i*4);
+                    ctx.stroke();
+                }
+
+                // Crown
+                ctx.fillStyle = "#2bbd27";
+                ctx.beginPath();
+                ctx.moveTo(e.x, e.y-e.r*1.1);
+                ctx.lineTo(e.x-6, e.y-e.r*0.8);
+                ctx.lineTo(e.x-2, e.y-e.r*0.7);
+                ctx.lineTo(e.x+2, e.y-e.r*0.9);
+                ctx.lineTo(e.x+6, e.y-e.r*0.7);
+                ctx.lineTo(e.x+2, e.y-e.r*0.8);
+                ctx.closePath();
+                ctx.fill();
+
+                // Eyes
+                ctx.beginPath();
+                ctx.arc(e.x-5, e.y+2, 2, 0, 2*Math.PI);
+                ctx.arc(e.x+5, e.y+2, 2, 0, 2*Math.PI);
+                ctx.fillStyle = "#fff";
+                ctx.fill();
+
+                // Mouth (smile)
+                ctx.beginPath();
+                ctx.arc(e.x, e.y+8, 4, 0, Math.PI, false);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+                ctx.restore();
+            }
             ctx.restore();
         });
 
         // Draw UI
         ctx.save();
         ctx.font = "bold 18px Arial";
-        ctx.fillStyle = "#e9f3ff";
+        ctx.fillStyle = "#065c1d";
         ctx.textAlign = "left";
         ctx.fillText("Score: "+this.score, 16, 28);
         ctx.textAlign = "right";
@@ -336,28 +453,89 @@ class SpaceShooterGame {
         // Menu UI (drawn on canvas for fade)
         if (this.state === 'menu') {
             ctx.save();
-            ctx.globalAlpha = 0.94;
-            ctx.fillStyle = "#181828cc";
+            ctx.globalAlpha = 0.92;
+            ctx.fillStyle = "#001e1ecc";
             ctx.fillRect(0,0,this.width,this.height);
             ctx.globalAlpha = 1;
             ctx.font = "bold 40px Arial";
-            ctx.fillStyle = "#32aaff";
+            ctx.fillStyle = "#20b573";
             ctx.textAlign = "center";
-            ctx.fillText("SPACE SHOOTER", this.width/2, this.height/2-50);
+            ctx.fillText("TROPICAL SHOOTER", this.width/2, this.height/2-50);
             ctx.font = "20px Arial";
             ctx.fillStyle = "#fff";
             ctx.fillText("Arrow keys: Move", this.width/2, this.height/2+10);
             ctx.fillText("Space/Z: Shoot", this.width/2, this.height/2+44);
-            ctx.fillStyle = "#00f0fa";
+            ctx.fillStyle = "#ffe066";
             ctx.font = "16px Arial";
             ctx.fillText("Click Start to Play!", this.width/2, this.height/2+94);
             ctx.restore();
         }
     }
+
+    drawPalmTree(ctx, baseX, baseY, scale, flip=1) {
+        ctx.save();
+        ctx.translate(baseX, baseY);
+        ctx.scale(scale*flip, scale);
+
+        // Trunk
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(5, -16, -10, -70, 0, -100);
+        ctx.lineWidth = 12;
+        ctx.strokeStyle = "#9e7a35";
+        ctx.shadowColor = "#eac785";
+        ctx.shadowBlur = 5;
+        ctx.stroke();
+        ctx.restore();
+
+        // Leaves
+        const colors = ["#5edc6c", "#34a853", "#2cbb66"];
+        for(let l=0;l<5;l++){
+            ctx.save();
+            ctx.rotate((-Math.PI/2.2)+l*(Math.PI/6));
+            ctx.beginPath();
+            ctx.moveTo(0, -100);
+            ctx.bezierCurveTo(8, -116, 34, -110, 24, -130);
+            ctx.lineWidth = 7;
+            ctx.strokeStyle = colors[l%colors.length];
+            ctx.shadowColor = colors[l%colors.length];
+            ctx.shadowBlur = 18;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Coconuts
+        ctx.save();
+        ctx.globalAlpha = 0.76;
+        ctx.beginPath();
+        ctx.arc(0, -93, 6, 0, 2*Math.PI);
+        ctx.arc(7, -97, 5, 0, 2*Math.PI);
+        ctx.arc(-6, -97, 5, 0, 2*Math.PI);
+        ctx.fillStyle = "#8b5c2d";
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    drawCloud(ctx, x, y, r, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2*Math.PI);
+        ctx.arc(x+r*0.9, y+4, r*0.8, 0, 2*Math.PI);
+        ctx.arc(x-r*0.7, y+7, r*0.7, 0, 2*Math.PI);
+        ctx.arc(x+r*0.3, y+11, r*0.7, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
 }
 
 // --- Initialization ---
 function initGame() {
-    new SpaceShooterGame('gameContainer');
+    new TropicalShooterGame('gameContainer');
 }
 window.addEventListener('DOMContentLoaded', initGame);
